@@ -1,4 +1,4 @@
-# Demo: Agent LLM z dostępem do bazY SQL 
+# Demo: Agent LLM z dostępem do bazy SQL 
 
 Ten projekt to w pełni funkcjonalny **proof-of-concept**, który demonstruje, jak zbudować zaawansowanego agenta opartego na dużym modelu językowym (LLM), który potrafi inteligentnie korzystać z wielu różnych źródeł danych. Agent jest w stanie samodzielnie decydować, czy odpowiedzieć na pytanie użytkownika, odpytując relacyjną bazę danych **PostgreSQL** za pomocą zapytań **SQL**, czy też przeszukując semantycznie bazę wektorową **Chroma**.
 
