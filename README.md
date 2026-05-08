@@ -1,107 +1,216 @@
-# Demo: Agent LLM z dostępem do bazy SQL 
+# LLM MCP Project
 
-Ten projekt to w pełni funkcjonalny **proof-of-concept**, który demonstruje, jak zbudować zaawansowanego agenta opartego na dużym modelu językowym (LLM), który potrafi inteligentnie korzystać z wielu różnych źródeł danych. Agent jest w stanie samodzielnie decydować, czy odpowiedzieć na pytanie użytkownika, odpytując relacyjną bazę danych **PostgreSQL** za pomocą zapytań **SQL**, czy też przeszukując semantycznie bazę wektorową **Chroma**.
+A simple demo project showing how an LLM agent can interact with a PostgreSQL database through an MCP-style server.
 
-Całość została zbudowana z użyciem nowoczesnych narzędzi, takich jak **LangChain** do budowy agenta, **FastAPI** do tworzenia API oraz **Docker** do konteneryzacji, co zapewnia łatwe i spójne uruchomienie całego środowiska.
-
----
-
-## Kluczowe cechy projektu
-
-* **Inteligentny Agent:** Agent LLM (GPT-4) analizuje pytanie użytkownika i decyduje, którego narzędzia użyć.
-* **Dostęp do Bazy SQL:** Potrafi tłumaczyć język naturalny na zapytania SQL i wykonywać je na bazie PostgreSQL.
-* **Dostęp do Bazy Wektorowej:** Potrafi wykonywać wyszukiwanie semantyczne (podobieństwa) w bazie Chroma.
-* **Architektura Mikrousług:** Każdy komponent (backend, bazy danych, serwery pośredniczące) działa w osobnym kontenerze Docker.
-* **Bezpieczeństwo:** Dostęp do baz danych odbywa się przez warstwę pośredniczącą (MCP), która może narzucać ograniczenia (np. zezwalać tylko na zapytania `SELECT`).
+The application uses **FastAPI**, **LangChain**, **OpenAI**, **PostgreSQL**, and **Docker Compose**.
 
 ---
 
-## 1. Wymagania
+## Features
 
-Przed rozpoczęciem upewnij się, że masz zainstalowane poniższe narzędzia:
-
-| Narzędzie         | Wersja | Cel                                      |
-| :---------------- | :----- | :--------------------------------------- |
-| Docker Desktop    | 20.10+ | Do uruchamiania i zarządzania kontenerami |
-| Docker Compose V2 | 2.x    | Do orkiestracji wielokontenerowej aplikacji|
-| Klucz API OpenAI  | dowolny| Do komunikacji z modelem GPT-4           |
-
-> **Uwaga:** Na systemie Windows 11 Docker Desktop wymaga włączonego WSL 2 oraz wirtualizacji w ustawieniach BIOS/UEFI.
+- Natural language questions handled by an LLM agent
+- PostgreSQL database integration
+- MCP-style server for database access
+- Read-only SQL execution
+- FastAPI backend
+- Docker Compose setup
+- Simple CLI client
+- Adminer for database preview
 
 ---
 
-## 2. Instalacja i uruchomienie
+## Tech Stack
 
-### Krok 1: Klonowanie repozytorium
+- Python 3.11
+- FastAPI
+- LangChain
+- OpenAI API
+- PostgreSQL
+- Docker
+- Docker Compose
+- Adminer
 
-Otwórz terminal i sklonuj repozytorium do wybranego folderu na swoim komputerze.
+---
+
+## Project Structure
+
+```text
+llm-mcp-project/
+├── backend/
+│   ├── app/
+│   ├── Dockerfile
+│   └── requirements.txt
+├── db/
+│   └── init/
+├── mcp-servers/
+│   └── postgres/
+├── scripts/
+│   └── ask.py
+├── docker-compose.yml
+└── README.md
+```
+
+---
+
+## Requirements
+
+Before running the project, make sure you have installed:
+
+- Docker
+- Docker Compose
+- Python 3.11+
+- OpenAI API key
+
+---
+
+## Environment Variables
+
+Create a `.env` file inside the `backend` folder:
+
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o
+```
+
+---
+
+## How to Run
+
+Clone the repository:
 
 ```bash
 git clone https://github.com/cptn3m012/llm-mcp-project.git
-cd llm-mcp-demo
+cd llm-mcp-project
 ```
 
-### Krok 2: Konfiguracja klucza API (Krytyczne!)
-
-Agent potrzebuje Twojego klucza API do komunikacji z OpenAI. Bez niego aplikacja nie zadziała.
-
-1.  Przejdź do folderu `backend/`.
-2.  Utwórz w nim nowy plik o nazwie `.env`.
-3.  Otwórz ten plik w edytorze tekstu i wklej do niego poniższą linię, zastępując `sk-....` swoim prawdziwym kluczem API od OpenAI:
-
-    ```
-    OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    ```
-### Krok 3: Budowa i uruchomienie kontenerów
-
-W głównym folderze projektu (`llm-mcp-demo`) uruchom poniższą komendę. Docker Compose zajmie się pobraniem obrazów, zbudowaniem Twojej aplikacji i uruchomieniem wszystkich usług.
-
-> Pierwsze uruchomienie może potrwać kilka minut.
+Start the application:
 
 ```bash
 docker-compose up --build -d
 ```
-* Opcja `--build` jest ważna przy pierwszym uruchomieniu, aby zbudować obrazy na podstawie plików Dockerfile.
-* Opcja `-d` (detached) uruchamia kontenery w tle, dzięki czemu możesz dalej korzystać z terminala.
 
-### Krok 4: Weryfikacja
-
-Aby upewnić się, że wszystko wystartowało poprawnie, możesz sprawdzić logi głównego kontenera aplikacji:
+Check if containers are running:
 
 ```bash
-docker-compose logs -f backend
+docker-compose ps
 ```
-Jeśli wszystko poszło dobrze, powinieneś zobaczyć komunikaty informujące o pomyślnym pobraniu schematów z serwerów MCP i gotowości agenta do pracy. Naciśnij Ctrl+C, aby zakończyć podgląd logów.
 
-## 3. Jak korzystać z systemu?
+---
 
-Do interakcji z agentem służy prosty skrypt w terminalu.
+## API
 
-Uruchom klienta:
+### Health Check
+
+```http
+GET /health
+```
+
+Example:
+
+```bash
+curl http://localhost:8000/health
+```
+
+---
+
+### Ask a Question
+
+```http
+POST /query
+```
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "How many users are in the database?"}'
+```
+
+---
+
+## CLI Client
+
+Run the CLI client:
 
 ```bash
 python scripts/ask.py
 ```
-Pojawi się znak zachęty `🟢 >`, gdzie możesz wpisywać swoje pytania.
 
-Przykładowe pytania, które możesz zadać:
+Example questions:
 
-* **Pytanie do bazy SQL:**
-    * `Ilu jest użytkowników w bazie?`
-    * `Pokaż wszystkie posty użytkownika o imieniu Alice.`
-    * `Ile komentarzy ma każdy post?`
-* **Pytanie do bazy wektorowej:**
-    * `Co wiesz o bazach wektorowych?`
-    * `Jakie są zalety RAG?`
-* **Pytanie ogólne (bez użycia narzędzi):**
-    * `Napisz krótki wiersz o programowaniu w Pythonie.`
-    * `Jaka jest stolica Polski?`
- 
-## 4. Zatrzymywanie projektu
+```text
+How many users are in the database?
+Show me all posts.
+Which user has the most posts?
+```
 
-Aby zatrzymać wszystkie kontenery i zwolnić używane przez nie porty, wykonaj komendę:
+To exit:
+
+```text
+exit
+```
+
+---
+
+## Adminer
+
+Adminer is available at:
+
+```text
+http://localhost:8080
+```
+
+Database login:
+
+```text
+System: PostgreSQL
+Server: pg
+Username: llm_user
+Password: llm_pass
+Database: llm_db
+```
+
+---
+
+## Database
+
+PostgreSQL is available locally on:
+
+```text
+localhost:5433
+```
+
+Default credentials:
+
+```text
+Database: llm_db
+User: llm_user
+Password: llm_pass
+```
+
+---
+
+## Stop the Application
+
+Stop containers:
 
 ```bash
 docker-compose down
 ```
-      
+
+Stop containers and remove database volume:
+
+```bash
+docker-compose down -v
+```
+
+---
+
+## Notes
+
+This project is a proof of concept.
+
+The database tool is designed for read-only SQL queries.
+
+For production use, add proper authentication, stronger SQL validation, logging, rate limiting, and secure secret management.
