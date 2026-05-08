@@ -214,3 +214,7 @@ This project is a proof of concept.
 The database tool is designed for read-only SQL queries.
 
 For production use, add proper authentication, stronger SQL validation, logging, rate limiting, and secure secret management.
+
+## License
+
+This project is licensed under the MIT License.
